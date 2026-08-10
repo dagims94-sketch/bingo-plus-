@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="am">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bingo Plus+ - Complete App</title>
+    <style>
+        :root {
+            --bg-primary: #121629;
+            --bg-secondary: #1a1f3c;
+            --accent-gold: #ffaa00;
+            --accent-orange: #f97316;
+            --text-main: #ffffff;
+            --text-muted: #94a3b8;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-main);
+            margin: 0;
+            padding: 10px;
+            box-sizing: border-box;
+            text-align: center;
+            padding-bottom: 60px;
+        }
+        .screen {
+            display: none;
+        }
+        .screen.active {
+            display: block;
+        }
+
+        /* 1. Game Lobby & Live Screen Styles */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 3px;
+            background: var(--bg-secondary);
+            border: 1px solid rgba(255, 170, 0, 0.2);
+            border-radius: 8px;
+            padding: 6px 2px;
+            margin-bottom: 8px;
+        }
+        .stat-box {
+            font-size: 9px;
+            color: var(--text-muted);
+        }
+        .stat-box b {
+            display: block;
+            font-size: 11px;
+            color: var(--accent-gold);
+        }
+        .game-layout {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 8px;
+        }
+        .board-container {
+            flex: 1.2;
+            background: var(--bg-secondary);
+            border: 1px solid rgba(255, 170, 0, 0.2);
+            border-radius: 8px;
+            padding: 4px;
+            max-height: 420px;
+            overflow-y: auto;
+        }
+        .bingo-col-header {
+            font-weight: bold;
+            font-size: 12px;
+            color: white;
+            margin-bottom: 2px;
+            padding: 3px 0;
+            border-radius: 4px;
+        }
+        .b-head { background: #3b82f6; }
+        .i-head { background: #ec4899; }
+        .n-head { background: #8b5cf6; }
+        .g-head { background: #10b981; }
+        .o-head { background: #f97316; }
+
+        .number-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 2px;
+        }
+        .num-cell {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            font-size: 10px;
+            font-weight: bold;
+            padding: 6px 0;
+            border-radius: 3px;
+            color: var(--text-muted);
+        }
+        .num-cell.called {
+            background: #f97316;
+            color: white;
+            border-color: #f97316;
+        }
+        .right-panel {
+            flex: 1.1;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .recent-calls {
+            display: flex;
+            justify-content: space-between;
+            background: var(--bg-secondary);
+            padding: 6px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 170, 0, 0.15);
+        }
+        .mini-circle {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 9px;
+            font-weight: bold;
+            background: #3b82f6;
+            color: white;
+        }
+        .caller-box {
+            background: var(--bg-secondary);
+            border: 1px solid rgba(255, 170, 0, 0.2);
+            border-radius: 8px;
+            padding: 10px;
+            text-align: center;
+        }
+        .current-call-circle {
+            width: 60px;
+            height: 60px;
+            margin: 0 auto;
+            background: radial-gradient(circle, #fbbf24, #f97316);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+            font-weight: bold;
+            color: #121629;
+            border: 2px solid #fff;
+        }
+        .notification-box {
+            background: var(--bg-secondary);
+            border: 1px solid rgba(255, 170, 0, 0.2);
+            border-radius: 8px;
+            padding: 12px 6px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        .bottom-action-bar {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1.2fr;
+            gap: 6px;
+            margin-top: 5px;
+        }
+        .btn-action {
+            padding: 10px 4px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 11px;
+            cursor: pointer;
+            color: white;
+        }
+        .btn-leave { background: linear-gradient(135deg, #ef4444, #dc2626); }
+        .btn-refresh { background: linear-gradient(135deg, #475569, #334155); }
+        .btn-automatic { background: linear-gradient(135deg, #d97706, #b45309); }
+
+        /* 2. Wallet Screen Styles */
+        .wallet-card {
+            background: linear-gradient(135deg, var(--bg-secondary), #232b4d);
+            border: 1px solid rgba(255, 170, 0, 0.3);
+            border-radius: 12px;
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+        .balance-amount {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--accent-gold);
+            margin: 5px 0 10px 0;
+        }
+        .wallet-actions {
+            display: flex;
+            gap: 8px;
+        }
+        .wallet-btn {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+            color: white;
+        }
+        .form-container {
+            background: var(--bg-secondary);
+            border: 1px solid rgba(255, 170, 0, 0.2);
+            border-radius: 10px;
+            padding: 10px;
+            text-align: left;
+            margin-bottom: 15px;
+        }
+        .form-group {
+            margin-bottom: 8px;
+        }
+        .form-group label {
+            display: block;
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 3px;
+        }
+        .form-input {
+            width: 100%;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            color: white;
+            font-size: 13px;
+            box-sizing: border-box;
+        }
+        .submit-btn {
+            width: 100%;
+            padding: 9px;
+            background: linear-gradient(135deg, var(--accent-gold), var(--accent-orange));
+            color: #121629;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        /* Bottom Navigation Bar */
+        .nav-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: #0b0f19;
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0;
+            border-top: 1px solid rgba(255, 170, 0, 0.15);
+            z-index: 100;
+        }
+        .nav-item {
+            color: var(--text-muted);
+            font-size: 11px;
+            cursor: pointer;
+        }
+        .nav-item.active {
+            color: var(--accent-gold);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 1. GAME SCREEN -->
+    <div id="screen-game" class="screen active">
+        <div class="stats-bar">
+            <div class="stat-box">Game ID<b>BBX8MALG</b></div>
+            <div class="stat-box">Players<b>87</b></div>
+            <div class="stat-box">Bet<b>10</b></div>
+            <div class="stat-box">Derash<b>696</b></div>
+            <div class="stat-box">Called<b>9</b></div>
+        </div>
+
+        <div class="game-layout">
+            <div class="board-container">
+                <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 2px; margin-bottom: 3px;">
+                    <div class="bingo-col-header b-head">B</div>
+                    <div class="bingo-col-header i-head">I</div>
+                    <div class="bingo-col-header n-head">N</div>
+                    <div class="bingo-col-header g-head">G</div>
+                    <div class="bingo-col-header o-head">O</div>
+                </div>
+                <div class="number-grid" id="full-board-grid"></div>
+            </div>
+
+            <div class="right-panel">
+                <div class="recent-calls">
+                    <div class="mini-circle" style="background:#8b5cf6;">N-36</div>
+                    <div class="mini-circle" style="background:#3b82f6;">B-1</div>
+                    <div class="mini-circle" style="background:#8b5cf6;">N-31</div>
+                    <div class="mini-circle" style="background:#f97316;">O-61</div>
+                </div>
+
+                <div class="caller-box">
+                    <div class="current-call-circle">O-61</div>
+                </div>
+
+                <div class="notification-box">
+                    <b style="font-size: 12px; margin-bottom: 3px;">Watching Only</b>
+                    <div style="font-size: 9px; color: var(--text-muted);">
+                        ጨዋታው በሂደት ላይ ነው። አዲስ ዙር ይጠበቁ።
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="bottom-action-bar">
+            <button class="btn-action btn-leave" onclick="alert('ጨዋታው ተቋርጧል')">Leave</button>
+            <button class="btn-action btn-refresh" onclick="location.reload()">Refresh</button>
+            <button class="btn-action btn-automatic" onclick="alert('አውቶማቲክ ሞድ ተቀይሯል')">Automatic</button>
+        </div>
+    </div>
+
+    <!-- 2. HISTORY SCREEN -->
+    <div id="screen-history" class="screen">
+        <h3 style="color: var(--accent-gold); font-size: 16px;">Game History</h3>
+        <div class="form-container">
+            <div style="display: flex; justify-content: space-between; font-size: 12px; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <span>Round #BBX7 (Win)</span>
+                <span style="color: #22c55e;">+850 ETB</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 12px; padding: 6px 0;">
+                <span>Round #BBX6 (Loss)</span>
+                <span style="color: #ef4444;">-10 ETB</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. WALLET SCREEN -->
+    <div id="screen-wallet" class="screen">
+        <h3 style="color: var(--accent-gold); font-size: 16px;">My Wallet</h3>
+        <div class="wallet-card">
+            <div style="font-size: 11px; color: var(--text-muted);">Total Balance</div>
+            <div class="balance-amount">1,450.00 ETB</div>
+            <div class="wallet-actions">
+                <button class="wallet-btn" style="background: #22c55e;" onclick="setWalletMode('deposit')">Deposit</button>
+                <button class="wallet-btn" style="background: #ef4444;" onclick="setWalletMode('withdraw')">Withdraw</button>
+            </div>
+        </div>
+
+        <div class="form-container">
+            <div id="wallet-form-title" style="font-size: 12px; font-weight: bold; color: var(--accent-gold); margin-bottom: 8px;">Deposit Funds</div>
+            <div class="form-group">
+                <label>Amount (ETB)</label>
+                <input type="number" class="form-input" placeholder="ብር ያስገቡ">
+            </div>
+            <div class="form-group">
+                <label>Phone / Account</label>
+                <input type="text" class="form-input" placeholder="ስልክ ቁጥር ያስገቡ">
+            </div>
+            <button class="submit-btn" onclick="alert('ግብይቱ ተፈጽሟል!')">Confirm</button>
+        </div>
+    </div>
+
+    <!-- 4. PROFILE SCREEN -->
+    <div id="screen-profile" class="screen">
+        <h3 style="color: var(--accent-gold); font-size: 16px;">Player Profile</h3>
+        <div class="form-container" style="text-align: center;">
+            <div style="font-size: 40px; margin-bottom: 5px;">👤</div>
+            <div style="font-size: 15px; font-weight: bold; color: white;">Dagim Sisay</div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 15px;">ID: #BINGO-8821</div>
+            <button class="submit-btn" style="background: #ef4444; color: white;" onclick="alert('ከአካውንት ወጥተዋል')">Log Out</button>
+        </div>
+    </div>
+
+    <!-- BOTTOM NAVIGATION BAR -->
+    <div class="nav-bar">
+        <div class="nav-item active" onclick="switchScreen('game', this)">🎮 Game</div>
+        <div class="nav-item" onclick="switchScreen('history', this)">📜 History</div>
+        <div class="nav-item" onclick="switchScreen('wallet', this)">💰 Wallet</div>
+        <div class="nav-item" onclick="switchScreen('profile', this)">👤 Profile</div>
+    </div>
+
+    <script>
+        // ቦርዱን መሙላት
+        const boardGrid = document.getElementById('full-board-grid');
+        let boardHtml = '';
+        for (let row = 0; row < 15; row++) {
+            for (let col = 0; col < 5; col++) {
+                let num = (col * 15) + (row + 1);
+                let isCalled = [1, 36, 28, 53, 60, 61, 16, 31].includes(num);
+                boardHtml += `<div class="num-cell ${isCalled ? 'called' : ''}">${num}</div>`;
+            }
+        }
+        boardGrid.innerHTML = boardHtml;
+
+        // ስክሪን መቀየሪያ ተግባር
+        function switchScreen(screenName, element) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById(`screen-${screenName}`).classList.add('active');
+
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            element.classList.add('active');
+        }
+
+        // የኪስ ቦርሳ ሞድ መቀየሪያ
+        function setWalletMode(mode) {
+            const title = document.getElementById('wallet-form-title');
+            title.innerText = mode === 'deposit' ? 'Deposit Funds' : 'Withdraw Funds';
+        }
+    </script>
+</body>
+</html>
